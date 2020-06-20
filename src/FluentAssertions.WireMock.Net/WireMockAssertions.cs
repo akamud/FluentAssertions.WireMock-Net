@@ -8,13 +8,13 @@ namespace FluentAssertions.WireMock
     {
         private readonly WireMockServer _instance;
 
-        public WireMockAssertions(WireMockServer instance)
+        public WireMockAssertions(WireMockServer instance, int? callsCount)
         {
             _instance = instance;
         }
 
         [CustomAssertion]
-        public AndConstraint<WireMockAssertions> ForAbsoluteUrl(string absoluteUrl, string because = "",
+        public AndConstraint<WireMockAssertions> AtAbsoluteUrl(string absoluteUrl, string because = "",
             params object[] becauseArgs)
         {
             Execute.Assertion

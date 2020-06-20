@@ -19,14 +19,15 @@ namespace FluentAssertions.WireMock.UnitTests.Specs
             _server = WireMockServer.Start(Port);
             _httpClient = new HttpClient {BaseAddress = new Uri($"http://localhost:{Port}")};
         }
-        
+
         [Test]
-        public void ForAbsoluteUrlShouldThrowWhenNoCallsWereMade()
+        public void AtAbsoluteUrlShouldThrowWhenNoCallsWereMade()
         {
             _server.WithDefaultServer();
 
-            Action act = () => _server.Should().HaveBeenCalled()
-                .ForAbsoluteUrl("anyurl");
+            Action act = () => _server.Should()
+                .HaveReceivedACall()
+                .AtAbsoluteUrl("anyurl");
 
             act.Should().Throw<Exception>()
                 .And.Message.Should()
@@ -35,14 +36,15 @@ namespace FluentAssertions.WireMock.UnitTests.Specs
         }
 
         [Test]
-        public async Task ForAbsoluteUrlShouldThrowWhenNoCallsMatchingTheAbsoluteUrlWereMade()
+        public async Task AtAbsoluteUrlShouldThrowWhenNoCallsMatchingTheAbsoluteUrlWereMade()
         {
             _server.WithDefaultServer();
 
             await _httpClient.GetAsync("");
 
-            Action act = () => _server.Should().HaveBeenCalled()
-                .ForAbsoluteUrl("anyurl");
+            Action act = () => _server.Should()
+                .HaveReceivedACall()
+                .AtAbsoluteUrl("anyurl");
 
             act.Should().Throw<Exception>()
                 .And.Message.Should()
