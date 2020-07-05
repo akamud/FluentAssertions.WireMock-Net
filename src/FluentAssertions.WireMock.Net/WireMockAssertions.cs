@@ -47,22 +47,23 @@ namespace FluentAssertions.WireMock
         // TODO: faz diferença?
         [CustomAssertion]
         public AndConstraint<WireMockAssertions> WithHeader(string key, string value,
-            // Func<EquivalencyAssertionOptions<string>, EquivalencyAssertionOptions<string>> config, 
             string because = "", params object[] becauseArgs)
         {
-            using (var a = new AssertionScope("headers from requests sent"))
+            var headersDictionary = _subject.LogEntries.SelectMany(x => x.RequestMessage.Headers)
+                .ToDictionary(x => x.Key, x => x.Value);
+            
+            using (new AssertionScope("headers from requests sent"))
             {
-                a.FailWith("expected body to be");
-                // TODO: Pegar todos valores da lista do WireMockList
-                _subject.LogEntries.SelectMany(x => x.RequestMessage.Headers)
-                    .ToDictionary(x => x.Key, x => x.Value.FirstOrDefault())
-                    .Should().Contain(key, value, because, becauseArgs);
+                headersDictionary.Should().ContainKey(key, because, becauseArgs);
             }
-            
+
+            using (new AssertionScope($"header {{{key}}} from requests sent with value(s)"))
+            {
+                headersDictionary[key].Should().Contain(value);
+            }
+
             return new AndConstraint<WireMockAssertions>(this);
-        
-            
-            
+
             // POC
             // if (config is null)
             // {
