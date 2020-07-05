@@ -44,7 +44,9 @@ namespace FluentAssertions.WireMock.UnitTests.Specs
 
             Action act = () => _server.Should()
                 .HaveReceivedACall()
-                .AtAbsoluteUrl("anyurl");
+                .WithHeader("A", "B");
+                // .And
+                // .AtAbsoluteUrl("anyurl");
 
             act.Should().Throw<Exception>()
                 .And.Message.Should()

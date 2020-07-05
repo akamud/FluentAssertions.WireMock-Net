@@ -1,6 +1,5 @@
 using FluentAssertions.Equivalency;
 using FluentAssertions.Execution;
-using FluentAssertions.Primitives;
 using System;
 using System.Linq;
 using WireMock.Server;
@@ -9,11 +8,12 @@ namespace FluentAssertions.WireMock
 {
     public class WireMockAssertions
     {
-        private readonly WireMockServer _instance;
+        private readonly WireMockServer _subject;
+        private const string HeadersIdentifier = "headers";
 
-        public WireMockAssertions(WireMockServer instance, int? callsCount)
+        public WireMockAssertions(WireMockServer subject, int? callsCount)
         {
-            _instance = instance;
+            _subject = subject;
         }
 
         [CustomAssertion]
@@ -22,7 +22,7 @@ namespace FluentAssertions.WireMock
         {
             Execute.Assertion
                 .BecauseOf(because, becauseArgs)
-                .Given(() => _instance.LogEntries.Select(x => x.RequestMessage).ToList())
+                .Given(() => _subject.LogEntries.Select(x => x.RequestMessage).ToList())
                 .ForCondition(requests => requests.Any())
                 .FailWith(
                     "Expected {context:wiremockserver} to have been called at address matching the absolute url {0}{reason}, but no calls were made.",
@@ -36,19 +36,84 @@ namespace FluentAssertions.WireMock
             return new AndConstraint<WireMockAssertions>(this);
         }
 
+        // // TODO: faz diferença?
+        // [CustomAssertion]
+        // public AndConstraint<WireMockAssertions> WithHeader(string key, string value, string because = "",
+        //     params object[] becauseArgs)
+        // {
+        //     return WithHeader(key, value, because, becauseArgs);
+        // }
+
+        // TODO: faz diferença?
         [CustomAssertion]
-        public AndConstraint<WireMockAssertions> WithHeader(string key, string value, string because = "",
-            params object[] becauseArgs)
+        public AndConstraint<WireMockAssertions> WithHeader(string key, string value,
+            // Func<EquivalencyAssertionOptions<string>, EquivalencyAssertionOptions<string>> config, 
+            string because = "", params object[] becauseArgs)
         {
-            using (new AssertionScope("headers from requests sent"))
+            using (var a = new AssertionScope("headers from requests sent"))
             {
+                a.FailWith("expected body to be");
                 // TODO: Pegar todos valores da lista do WireMockList
-                _instance.LogEntries.SelectMany(x => x.RequestMessage.Headers)
+                _subject.LogEntries.SelectMany(x => x.RequestMessage.Headers)
                     .ToDictionary(x => x.Key, x => x.Value.FirstOrDefault())
                     .Should().Contain(key, value, because, becauseArgs);
             }
-
+            
             return new AndConstraint<WireMockAssertions>(this);
+        
+            
+            
+            // POC
+            // if (config is null)
+            // {
+            //     throw new ArgumentNullException(nameof(config));
+            // }
+            //
+            // if (ReferenceEquals(_subject, null))
+            // {
+            //     Execute.Assertion
+            //         .BecauseOf(because, becauseArgs)
+            //         .WithDefaultIdentifier(HeadersIdentifier)
+            //         .FailWith($"Expected {{context:{HeadersIdentifier}}} to contain of {{0}}{{reason}}, but found <null>.", key);
+            // }
+            //
+            // EquivalencyAssertionOptions<string> options = config(AssertionOptions.CloneDefaults<string>());
+            //
+            // using (var scope = new AssertionScope())
+            // {
+            //     scope.AddReportable("configuration", options.ToString());
+            //
+            //     var headers = _subject.LogEntries.SelectMany(x => x.RequestMessage.Headers)
+            //     foreach (object actualItem in )
+            //     {
+            //         var context = new EquivalencyValidationContext
+            //         {
+            //             Subject = actualItem,
+            //             Expectation = expectation,
+            //             CompileTimeType = typeof(TExpectation),
+            //             Because = because,
+            //             BecauseArgs = becauseArgs,
+            //             Tracer = options.TraceWriter,
+            //         };
+            //
+            //         var equivalencyValidator = new EquivalencyValidator(options);
+            //         equivalencyValidator.AssertEquality(context);
+            //
+            //         string[] failures = scope.Discard();
+            //
+            //         if (!failures.Any())
+            //         {
+            //             return new AndConstraint<WireMockAssertions>(this);
+            //         }
+            //     }
+            //
+            //     Execute.Assertion
+            //         .BecauseOf(because, becauseArgs)
+            //         .FailWith("Expected {context:collection} {0} to contain equivalent of {1}{reason}.", Subject,
+            //             expectation);
+            // }
+            //
+            // return new AndConstraint<TAssertions>((TAssertions) this);
         }
 
         [CustomAssertion]
@@ -63,7 +128,7 @@ namespace FluentAssertions.WireMock
             //
             // var context = new EquivalencyValidationContext
             // {
-            //     Subject = _instance,
+            //     Subject = _subject,
             //     Expectation = expectation,
             //     CompileTimeType = typeof(TExpectation),
             //     Because = because,
@@ -76,7 +141,7 @@ namespace FluentAssertions.WireMock
 
             Func<EquivalencyAssertionOptions<TExpectation>, EquivalencyAssertionOptions<TExpectation>> c = s =>
                 AssertionOptions.CloneDefaults<TExpectation>();
-            ((object) _instance).Should().BeEquivalentTo(expectation, c, because, becauseArgs);
+            ((object) _subject).Should().BeEquivalentTo(expectation, c, because, becauseArgs);
 
             return new AndConstraint<WireMockAssertions>(this);
         }
